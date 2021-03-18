@@ -1,4 +1,6 @@
 const express = require('express');
+const config = require('./config.js');
+const queries = require('./queries.js');
 
 let app = express();
 
@@ -11,7 +13,15 @@ app.get('/', (req, res) => {
 });
 
 app.get('/products/:id', (req, res) => {
-  res.status(201).send('products');
+  // const { id } = req.params;
+
+  queries.getProduct()
+    .then((results) => {
+      res.status(201).send(results);
+    })
+    .catch((error) => {
+      res.status(501).send(error);
+    });
 });
 
 app.get('/products/:id/styles', (req, res) => {
