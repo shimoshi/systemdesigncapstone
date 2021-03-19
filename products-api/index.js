@@ -12,8 +12,8 @@ app.get('/', (req, res) => {
   res.status(201).send('hey');
 });
 
-app.get('/products/:id', (req, res) => {
-  const { id } = req.params;
+app.get('/:campus/products/:id', (req, res) => {
+  const { campus, id } = req.params;
   const product = {};
 
   queries.getProduct(id)
@@ -24,15 +24,19 @@ app.get('/products/:id', (req, res) => {
         slogan,
         description,
         category,
-        default_price
+        default_price,
       } = results.rows[0];
 
+      let new_default_price = Number(default_price);
+      new_default_price += '' + '.00';
+
       product.id = id;
+      product.campus = campus;
       product.name = name;
       product.slogan = slogan;
       product.description = description;
       product.category = category;
-      product.default_price = default_price;
+      product.default_price = new_default_price;
 
       return queries.getFeatures(id);
     })
