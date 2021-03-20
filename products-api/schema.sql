@@ -74,7 +74,17 @@ CREATE TABLE photos (
       references styles(id)
 );
 
-COPY photos (id, style_id, thumbnail_url, url)
+CREATE TABLE photos2 (
+  id int primary key NOT NULL,
+  style_id int NOT NULL,
+  thumbnail_url varchar(500000) NOT NULL,
+  url varchar(500000) NOT NULL,
+  constraint fk_style
+    foreign key(style_id)
+      references styles(id)
+);
+
+COPY photos2 (id, style_id, thumbnail_url, url)
 FROM '/Users/Timmy/Downloads/photos.csv'
 DELIMITER ','
 CSV HEADER;

@@ -7,6 +7,14 @@ const pool = new Pool({
   port: config.PORT,
 });
 
+const getAllProducts = (page, count) => {
+  return pool.query(`
+    SELECT * FROM products
+      LIMIT ${count}
+      OFFSET ${page * count}
+  `)
+}
+
 const getProduct = (id) => {
   return pool.query(`
     SELECT * FROM products WHERE id = ${id}
@@ -45,6 +53,7 @@ const getRelated = (id) => {
 }
 
 module.exports = {
+  getAllProducts,
   getProduct,
   getFeatures,
   getStyles,

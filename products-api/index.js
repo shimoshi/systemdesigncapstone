@@ -8,8 +8,23 @@ let app = express();
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.status(201).send('hey');
+app.get('/products', (req, res) => {
+  let page = req.query.page || 1;
+  let count = req.query.count || 5;
+
+  queries.getAllProducts(page - 1, count)
+    .then((results) => {
+      results.rows.forEach((product) => {
+        let new_default_price = Number(product.default_price);
+        new_default_price += '' + '.00';
+        product.default_price = new_default_price;
+      })
+
+      res.status(200).send(results);
+    })
+    .catch((error) => {
+      res.status(501).send(erorr);
+    })
 });
 
 // 5.04s
