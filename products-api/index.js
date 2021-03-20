@@ -24,7 +24,7 @@ app.get('/products', (req, res) => {
       res.status(200).send(results);
     })
     .catch((error) => {
-      res.status(501).send(erorr);
+      res.status(501).send(error);
     })
 });
 
