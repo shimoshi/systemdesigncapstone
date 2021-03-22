@@ -54,7 +54,7 @@ CREATE TABLE features (
   id int primary key NOT NULL,
   product_id int NOT NULL,
   feature varchar(50) NOT NULL,
-  type varchar(50),
+  value varchar(50),
   constraint fk_product
     foreign key(product_id)
       references products(id)

@@ -28,6 +28,7 @@ app.get('/products', (req, res) => {
     })
 });
 
+/*
 // 5.04s
 app.get('/:campus/products/:id', (req, res) => {
   const { campus, id } = req.params;
@@ -73,7 +74,30 @@ app.get('/:campus/products/:id', (req, res) => {
       res.status(501).send(error);
     });
 });
+*/
 
+// .576s
+app.get('/products/:id', (req, res) => {
+  const { id } = req.params;
+  const product = {};
+
+  queries.getProduct(id)
+    .then((results) => {
+      result = results.rows[0];
+      const { default_price } = result;
+
+      let new_default_price = Number(default_price);
+      new_default_price += '' + '.00';
+      result.default_price = new_default_price;
+
+      res.status(200).send(result);
+    })
+    .catch((error) => {
+      res.status(501).send(error);
+    });
+});
+
+/*
 // 1m 43s
 app.get('/products/:id/styles', (req, res) => {
   const { id } = req.params;
@@ -86,7 +110,7 @@ app.get('/products/:id/styles', (req, res) => {
       const photosPromises = [];
 
       results.rows.forEach((style) => {
-        const {  id, name, original_price, sale_price, default_style } = style;
+        const { id, name, original_price, sale_price, default_style } = style;
 
         let final_sale_price = sale_price === 'null' ? null : sale_price;
         let final_default = default_style === '1' ? true : false;
@@ -127,6 +151,22 @@ app.get('/products/:id/styles', (req, res) => {
       }
 
       res.status(200).send(styles);
+    })
+    .catch((error) => {
+      res.status(501).send(error);
+    })
+});
+*/
+
+app.get('/products/:id/styles', (req, res) => {
+  const { id } = req.params;
+  const styles = {};
+
+  queries.getStyles(id)
+    .then((results) => {
+
+
+      res.status(200).send(results);
     })
     .catch((error) => {
       res.status(501).send(error);

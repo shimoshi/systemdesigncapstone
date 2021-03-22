@@ -17,10 +17,23 @@ const getAllProducts = (page, count) => {
 
 const getProduct = (id) => {
   return pool.query(`
-    SELECT * FROM products WHERE id = ${id}
-      LIMIT 1
+    EXPLAIN ANALYZE
+    SELECT
+      p.*,
+      CASE WHEN count(f) = 0 THEN ARRAY[]::json[] ELSE array_agg(f.option) END AS features
+    FROM products p
+      LEFT OUTER JOIN
+      (
+        SELECT f1.product_id, json_build_object('feature', f1.feature, 'value', f1.value) as option
+        FROM features f1
+        ORDER BY f1.id
+      ) f
+        ON p.id = f.product_id
+    WHERE p.id = ${id}
+    GROUP BY p.id
   `)
 }
+
 
 const getFeatures = (id) => {
   return pool.query(`
