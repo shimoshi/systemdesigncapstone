@@ -76,7 +76,7 @@ app.get('/:campus/products/:id', (req, res) => {
 });
 */
 
-// .576s
+// 576ms => after indexing 13ms
 app.get('/products/:id', (req, res) => {
   const { id } = req.params;
   const product = {};
@@ -86,9 +86,9 @@ app.get('/products/:id', (req, res) => {
       result = results.rows[0];
       const { default_price } = result;
 
-      let new_default_price = Number(default_price);
-      new_default_price += '' + '.00';
-      result.default_price = new_default_price;
+      let newDefaultPrice = Number(default_price);
+      newDefaultPrice += '' + '.00';
+      result.default_price = newDefaultPrice;
 
       res.status(200).send(result);
     })
@@ -158,15 +158,37 @@ app.get('/products/:id/styles', (req, res) => {
 });
 */
 
+// 5m 13s
 app.get('/products/:id/styles', (req, res) => {
   const { id } = req.params;
-  const styles = {};
+  const styles = {
+    product_id: String(id),
+    results: [],
+  };
 
   queries.getStyles(id)
     .then((results) => {
+      results.rows.forEach((style) => {
+        const { id, name, original_price, sale_price, default_style, photos } = style;
 
+        let newOriginalPrice = Number(original_price);
+        newOriginalPrice += '' + '.00';
+        let newSalePrice = sale_price === 'null' ? null : sale_price;
+        let newDefaultStye = default_style === '1' ? true : false;
 
-      res.status(200).send(results);
+        const newStyle = {
+          style_id: id,
+          name,
+          original_price: newOriginalPrice,
+          sale_price: newSalePrice,
+          'default?': newDefaultStye,
+          photos,
+        }
+
+        styles.results.push(newStyle);
+      })
+
+      res.status(200).send(styles);
     })
     .catch((error) => {
       res.status(501).send(error);

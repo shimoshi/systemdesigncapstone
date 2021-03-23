@@ -17,7 +17,6 @@ const getAllProducts = (page, count) => {
 
 const getProduct = (id) => {
   return pool.query(`
-    EXPLAIN ANALYZE
     SELECT
       p.*,
       CASE WHEN count(f) = 0 THEN ARRAY[]::json[] ELSE array_agg(f.option) END AS features
@@ -43,7 +42,19 @@ const getFeatures = (id) => {
 
 const getStyles = (id) => {
   return pool.query(`
-    SELECT * FROM styles WHERE product_id = ${id}
+    SELECT
+      s.*,
+      CASE WHEN count(p) = 0 THEN ARRAY[]::json[] ELSE array_agg(p.option) END AS photos
+    FROM styles s
+      LEFT OUTER JOIN
+      (
+        SELECT p1.style_id, json_build_object('thumbnail_url', p1.thumbnail_url, 'url', p1.url) as option
+        FROM photos p1
+        ORDER BY p1.id
+      ) p
+        ON s.id = p.style_id
+    WHERE s.product_id = ${id}
+    GROUP BY s.id
   `)
 }
 
