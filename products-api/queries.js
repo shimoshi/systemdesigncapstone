@@ -7,15 +7,18 @@ const pool = new Pool({
   port: config.PORT,
 });
 
+// planning: 13.5 ms
+// execution: 2.9 ms
 const getAllProducts = (page, count) => {
   return pool.query(`
-    EXPLAIN ANALYSE
     SELECT * FROM products
       LIMIT ${count}
       OFFSET ${page * count}
   `)
 }
 
+// planning: 12.8 ms
+// execution: 2.5 ms
 const getProduct = (id) => {
   return pool.query(`
     SELECT
@@ -33,29 +36,24 @@ const getProduct = (id) => {
   `)
 }
 
-
-const getFeatures = (id) => {
-  return pool.query(`
-    SELECT * FROM features WHERE product_id = ${id}
-  `)
-}
-
-// 211886.681ms  => 1ms
+// planning: 0.3 ms
+// execution: 8.4 ms
 const getStyles = (id) => {
   return pool.query(`
     SELECT
-      s.id, s.name, s.original_price, s.sale_price, s.default_style,
-      p.option as photos, sk.stock as skus
+      s.*,
+      p.photos as photos,
+      sk.skus as skus
     FROM styles s
       LEFT JOIN LATERAL
       (
-        SELECT array_agg(json_build_object('thumbnail_url', p1.thumbnail_url, 'url', p1.url)) as option
+        SELECT array_agg(json_build_object('thumbnail_url', p1.thumbnail_url, 'url', p1.url)) as photos
         FROM photos p1
         WHERE s.id = p1.style_id
       ) p on true
       LEFT JOIN LATERAL
       (
-        SELECT json_object_agg(sk1.id, json_build_object('size', sk1.size, 'quantity', sk1.quantity)) as stock
+        SELECT json_object_agg(sk1.id, json_build_object('quantity', sk1.quantity, 'size', sk1.size)) as skus
         FROM skus sk1
         WHERE s.id = sk1.style_id
       ) sk on true
@@ -63,22 +61,8 @@ const getStyles = (id) => {
   `)
 }
 
-const getPhotos = (id) => {
-  return pool.query(`
-    SELECT thumbnail_url, url FROM photos WHERE style_id = ${id}
-  `)
-}
-
-const getSkus = (id) => {
-  // return pool.query(`
-  //   SELECT id, quantity, size FROM skus WHERE style_id = ${id}
-  // `)
-
-  return pool.query(`
-    select json_object_agg(id, json_build_object('size', size, 'quantity', quantity)) from skus where style_id = ${id}
-  `)
-}
-
+// planning: 5.6 ms
+// execution: 1.5 ms
 const getRelated = (id) => {
   return pool.query(`
     SELECT related_id FROM related WHERE product_id = ${id}
@@ -88,9 +72,6 @@ const getRelated = (id) => {
 module.exports = {
   getAllProducts,
   getProduct,
-  getFeatures,
   getStyles,
-  getPhotos,
-  getSkus,
   getRelated,
 }

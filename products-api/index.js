@@ -4,11 +4,9 @@ const queries = require('./queries.js');
 
 let app = express();
 
-// app.use(express.static(__dirname + ''));
-
 app.use(express.json());
 
-// .91s
+// 910 ms => 133 ms
 app.get('/products', (req, res) => {
   let page = req.query.page || 1;
   let count = req.query.count || 5;
@@ -21,62 +19,14 @@ app.get('/products', (req, res) => {
         product.default_price = new_default_price;
       })
 
-      res.status(200).send(results);
+      res.status(200).send(results.rows);
     })
     .catch((error) => {
       res.status(501).send(error);
     })
 });
 
-/*
-// 5.04s
-app.get('/:campus/products/:id', (req, res) => {
-  const { campus, id } = req.params;
-  const product = {};
-
-  queries.getProduct(id)
-    .then((results) => {
-      const {
-        id,
-        name,
-        slogan,
-        description,
-        category,
-        default_price,
-      } = results.rows[0];
-
-      let new_default_price = Number(default_price);
-      new_default_price += '' + '.00';
-
-      product.id = id;
-      product.campus = campus;
-      product.name = name;
-      product.slogan = slogan;
-      product.description = description;
-      product.category = category;
-      product.default_price = new_default_price;
-
-      return queries.getFeatures(id);
-    })
-    .then((results) => {
-      product.features = [];
-
-      results.rows.forEach((feature) => {
-        product.features.push({
-          feature: feature.feature,
-          value: feature.type,
-        })
-      });
-
-      res.status(200).send(product);
-    })
-    .catch((error) => {
-      res.status(501).send(error);
-    });
-});
-*/
-
-// 576ms => after indexing 13ms
+// 576 ms => 70 ms
 app.get('/products/:id', (req, res) => {
   const { id } = req.params;
   const product = {};
@@ -97,68 +47,7 @@ app.get('/products/:id', (req, res) => {
     });
 });
 
-/*
-// 1m 43s
-app.get('/products/:id/styles', (req, res) => {
-  const { id } = req.params;
-  const styles = {};
-
-  queries.getStyles(id)
-    .then((results) => {
-      styles.product_id = String(id);
-      styles.results = [];
-      const photosPromises = [];
-
-      results.rows.forEach((style) => {
-        const { id, name, original_price, sale_price, default_style } = style;
-
-        let final_sale_price = sale_price === 'null' ? null : sale_price;
-        let final_default = default_style === '1' ? true : false;
-
-        const newStyle = {
-          style_id: id,
-          name,
-          original_price,
-          sale_price: final_sale_price,
-          'default?': final_default,
-          photos: [],
-          skus: {},
-        };
-        styles.results.push(newStyle);
-        photosPromises.push(queries.getPhotos(id));
-      })
-
-      return Promise.all(photosPromises);
-    })
-    .then((results) => {
-      const skusPromises = [];
-
-      for (let i = 0; i < results.length; i += 1) {
-        styles.results[i].photos = results[i].rows;
-        skusPromises.push(queries.getSkus(styles.results[i].style_id))
-      }
-
-      return Promise.all(skusPromises);
-    })
-    .then((results) => {
-      for (let i = 0; i < results.length; i += 1) {
-        results[i].rows.forEach((sku) => {
-          styles.results[i].skus[sku.id] = {
-            quantity: sku.quantity,
-            size: sku.size,
-          };
-        })
-      }
-
-      res.status(200).send(styles);
-    })
-    .catch((error) => {
-      res.status(501).send(error);
-    })
-});
-*/
-
-// 5m 13s
+// 211886 ms => 50 ms
 app.get('/products/:id/styles', (req, res) => {
   const { id } = req.params;
   const styles = {
@@ -196,7 +85,7 @@ app.get('/products/:id/styles', (req, res) => {
     })
 });
 
-// 5.77s
+// 5770 ms => 81 ms
 app.get('/products/:id/related', (req, res) => {
   const { id } = req.params;
 
