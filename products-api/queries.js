@@ -40,23 +40,26 @@ const getFeatures = (id) => {
   `)
 }
 
-// 211886.681 ms
+// 211886.681ms  => 1ms
 const getStyles = (id) => {
   return pool.query(`
     SELECT
-      s.*,
-      CASE WHEN count(p) = 0 THEN ARRAY[]::json[] ELSE array_agg(p.option) END AS photos,
-      (select json_object_agg(id, json_build_object('size', size, 'quantity', quantity)) from skus where skus.style_id = s.id)
+      s.id, s.name, s.original_price, s.sale_price, s.default_style,
+      p.option as photos, sk.stock as skus
     FROM styles s
-      LEFT JOIN
+      LEFT JOIN LATERAL
       (
-        SELECT p1.style_id, json_build_object('thumbnail_url', p1.thumbnail_url, 'url', p1.url) as option
+        SELECT array_agg(json_build_object('thumbnail_url', p1.thumbnail_url, 'url', p1.url)) as option
         FROM photos p1
-      ) p
-        ON s.id = p.style_id
-      INNER JOIN skus sk on sk.style_id = s.id
+        WHERE s.id = p1.style_id
+      ) p on true
+      LEFT JOIN LATERAL
+      (
+        SELECT json_object_agg(sk1.id, json_build_object('size', sk1.size, 'quantity', sk1.quantity)) as stock
+        FROM skus sk1
+        WHERE s.id = sk1.style_id
+      ) sk on true
     WHERE s.product_id = ${id}
-    GROUP BY s.id
   `)
 }
 
