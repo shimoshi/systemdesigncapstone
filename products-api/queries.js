@@ -9,6 +9,7 @@ const pool = new Pool({
 
 const getAllProducts = (page, count) => {
   return pool.query(`
+    EXPLAIN ANALYSE
     SELECT * FROM products
       LIMIT ${count}
       OFFSET ${page * count}
@@ -25,7 +26,6 @@ const getProduct = (id) => {
       (
         SELECT f1.product_id, json_build_object('feature', f1.feature, 'value', f1.value) as option
         FROM features f1
-        ORDER BY f1.id
       ) f
         ON p.id = f.product_id
     WHERE p.id = ${id}
@@ -40,19 +40,21 @@ const getFeatures = (id) => {
   `)
 }
 
+// 211886.681 ms
 const getStyles = (id) => {
   return pool.query(`
     SELECT
       s.*,
-      CASE WHEN count(p) = 0 THEN ARRAY[]::json[] ELSE array_agg(p.option) END AS photos
+      CASE WHEN count(p) = 0 THEN ARRAY[]::json[] ELSE array_agg(p.option) END AS photos,
+      (select json_object_agg(id, json_build_object('size', size, 'quantity', quantity)) from skus where skus.style_id = s.id)
     FROM styles s
-      LEFT OUTER JOIN
+      LEFT JOIN
       (
         SELECT p1.style_id, json_build_object('thumbnail_url', p1.thumbnail_url, 'url', p1.url) as option
         FROM photos p1
-        ORDER BY p1.id
       ) p
         ON s.id = p.style_id
+      INNER JOIN skus sk on sk.style_id = s.id
     WHERE s.product_id = ${id}
     GROUP BY s.id
   `)
@@ -65,8 +67,12 @@ const getPhotos = (id) => {
 }
 
 const getSkus = (id) => {
+  // return pool.query(`
+  //   SELECT id, quantity, size FROM skus WHERE style_id = ${id}
+  // `)
+
   return pool.query(`
-    SELECT id, quantity, size FROM skus WHERE style_id = ${id}
+    select json_object_agg(id, json_build_object('size', size, 'quantity', quantity)) from skus where style_id = ${id}
   `)
 }
 

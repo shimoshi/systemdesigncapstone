@@ -71,7 +71,7 @@ CREATE TABLE photos (
   url varchar(500000) NOT NULL,
   constraint fk_style
     foreign key(style_id)
-      references styles(id)
+      references styles(id)animea
 );
 
 CREATE TABLE photos2 (
@@ -102,6 +102,14 @@ COPY related (id, product_id, related_id)
 FROM '/Users/Timmy/Downloads/related.csv'
 DELIMITER ','
 CSV HEADER;
+
+CREATE INDEX idx_products_id on products(id);
+CREATE INDEX idx_features_product_id on features(product_id);
+CREATE INDEX idx_styles_id on styles(id);
+CREATE INDEX idx_photos_style_id on photos(style_id);
+CREATE INDEX idx_skus_style_id on skus(style_id);
+CREATE INDEX idx_related_product_id on related(product_id);
+
 
 -- $ brew services start postgresql
 -- $ psql postgres

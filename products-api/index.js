@@ -169,7 +169,7 @@ app.get('/products/:id/styles', (req, res) => {
   queries.getStyles(id)
     .then((results) => {
       results.rows.forEach((style) => {
-        const { id, name, original_price, sale_price, default_style, photos } = style;
+        const { id, name, original_price, sale_price, default_style, photos, skus } = style;
 
         let newOriginalPrice = Number(original_price);
         newOriginalPrice += '' + '.00';
@@ -183,6 +183,7 @@ app.get('/products/:id/styles', (req, res) => {
           sale_price: newSalePrice,
           'default?': newDefaultStye,
           photos,
+          skus,
         }
 
         styles.results.push(newStyle);
